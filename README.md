@@ -12,7 +12,9 @@ habits) and gives you a personal plan:
 - **Health protection** first for sensitive groups (children, elderly, asthma, COPD, heart conditions, pregnancy).
 - **Ask anything:** a free-text question answered by AI, grounded in your data.
 
-**Live app:** https://anshuu-prajapati.github.io/smartzone-air/ · **Demo video (2 min):** https://anshuu-prajapati.github.io/smartzone-air/demo.html
+**Live app:** https://anshuu-prajapati.github.io/smartzone-air/ · **Demo video (2 min):** https://anshuu-prajapati.github.io/smartzone-air/demo.html ([MP4](media/smartzone-air-demo.mp4))
+
+[![SmartZone Air demo](media/demo-poster.jpg)](https://anshuu-prajapati.github.io/smartzone-air/demo.html)
 
 ## How the GenAI is used
 1. `app/planner.py` computes every fact deterministically: India NAQI (CPCB breakpoints) from PM2.5/PM10, clean

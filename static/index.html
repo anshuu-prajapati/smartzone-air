@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartZone Air · Breathe smarter in smog season</title>
+  <meta name="description" content="A GenAI assistant that turns live air-quality forecasts into a personal plan: cleaner time windows, indoor air hacks and low-emission alternatives with their impact.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; media-src 'self'; connect-src 'self' https://geocoding-api.open-meteo.com https://air-quality-api.open-meteo.com https://generativelanguage.googleapis.com">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2246%22 fill=%22%230b6e4f%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header class="site">
+    <div class="wrap">
+      <p class="brand">SmartZone <span>Air</span></p>
+      <p class="tag">Breathe smarter in smog season</p>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section aria-labelledby="form-h" class="card">
+      <h1 id="form-h">Your personal clean-air plan</h1>
+      <p class="muted">Tell us a little about your day. We combine the live air-quality forecast for your city with your routine, then AI explains what to change and why it matters.</p>
+      <form id="plan-form" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="city">City</label>
+            <input id="city" name="city" required minlength="2" maxlength="80" autocomplete="address-level2" placeholder="e.g. Delhi, Lucknow, Mumbai">
+          </div>
+          <div class="field">
+            <label for="commute_mode">How do you usually commute?</label>
+            <select id="commute_mode" name="commute_mode">
+              <option value="two_wheeler">Two-wheeler</option>
+              <option value="car">Car</option>
+              <option value="auto">Auto-rickshaw</option>
+              <option value="bus">Bus</option>
+              <option value="metro">Metro</option>
+              <option value="cycle">Cycle</option>
+              <option value="walk">Walk</option>
+              <option value="wfh">Work / study from home</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="commute_km">One-way commute (km)</label>
+            <input id="commute_km" name="commute_km" type="number" min="0" max="200" step="0.5" value="10" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="workdays">Commute days per week</label>
+            <input id="workdays" name="workdays_per_week" type="number" min="0" max="7" value="5" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="cooks_with">Main cooking fuel</label>
+            <select id="cooks_with" name="cooks_with">
+              <option value="lpg">LPG / PNG</option>
+              <option value="electric">Induction / electric</option>
+              <option value="biomass">Wood / coal / biomass</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <fieldset>
+          <legend>Anyone in your home who is more sensitive to pollution?</legend>
+          <div class="chips">
+            <label><input type="checkbox" name="conditions" value="child"> Young child</label>
+            <label><input type="checkbox" name="conditions" value="elderly"> Elderly</label>
+            <label><input type="checkbox" name="conditions" value="asthma"> Asthma</label>
+            <label><input type="checkbox" name="conditions" value="copd"> COPD</label>
+            <label><input type="checkbox" name="conditions" value="heart"> Heart condition</label>
+            <label><input type="checkbox" name="conditions" value="pregnant"> Pregnancy</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Your habits</legend>
+          <div class="chips">
+            <label><input type="checkbox" name="outdoor_exercise" checked> I exercise outdoors</label>
+            <label><input type="checkbox" name="has_purifier"> I have an air purifier</label>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="question">Ask anything (optional)</label>
+          <input id="question" name="question" maxlength="400" placeholder="e.g. Is it safe to take my kids to the park this evening?">
+        </div>
+
+        <details id="ai-key-box" class="keybox" hidden>
+          <summary>Use Google Gemini for AI answers (optional)</summary>
+          <div class="field">
+            <label for="gemini_key">Your Gemini API key</label>
+            <input id="gemini_key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste a free key from Google AI Studio">
+            <p class="muted small">This static version has no server, so it cannot hold a secret key. Your key is kept only in this browser tab and sent directly to Google. Without a key, you get a rule-based summary built from the same facts.</p>
+          </div>
+        </details>
+
+        <button type="submit" id="submit">Get my plan</button>
+        <p id="form-error" class="error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <div id="status" class="sr-only" aria-live="polite"></div>
+
+    <section id="results" hidden aria-labelledby="res-h">
+      <h2 id="res-h" class="sr-only" tabindex="-1">Your results</h2>
+      <div class="card now" id="now"></div>
+      <div class="card ai">
+        <h3>Your AI coach says</h3>
+        <p id="ai-text" class="ai-text"></p>
+        <p class="muted small" id="ai-source"></p>
+      </div>
+      <div class="card">
+        <h3>Recommended actions</h3>
+        <ul id="actions" class="actions"></ul>
+      </div>
+      <div class="card">
+        <h3>Next 48 hours (estimated India NAQI)</h3>
+        <div id="chart" class="chart" role="img"></div>
+        <details>
+          <summary>Show as a table</summary>
+          <table id="hourly-table"><caption class="sr-only">Hourly NAQI forecast</caption>
+            <thead><tr><th scope="col">Time</th><th scope="col">NAQI</th><th scope="col">Category</th><th scope="col">PM2.5 (µg/m³)</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </details>
+      </div>
+      <p class="muted small">Data: Open-Meteo air-quality forecast (CAMS). NAQI is estimated from current PM2.5/PM10 concentrations using CPCB breakpoints. CO₂ and exposure figures are indicative estimates, not medical advice.</p>
+    </section>
+  </main>
+
+  <footer class="wrap muted small">SmartZone Air · built for PromptWars Virtual, Challenge 6 · <a href="https://github.com/anshuu-prajapati/smartzone-air">source on GitHub</a> · <a href="demo.html">watch the demo video</a></footer>
+  <script src="static/engine.js" defer></script>
+  <script src="static/app.js" defer></script>
+</body>
+</html>
